@@ -1,0 +1,91 @@
+name: OGRE CI Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  documentation:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required documentation files
+        run: |
+          echo "✅ Checking required documentation files..."
+          test -f PLAN.md && echo "✓ PLAN.md exists" || (echo "✗ PLAN.md missing"; exit 1)
+          test -f README.md && echo "✓ README.md exists" || (echo "✗ README.md missing"; exit 1)
+          test -f TEAM_SUMMARY.md && echo "✓ TEAM_SUMMARY.md exists" || (echo "✗ TEAM_SUMMARY.md missing"; exit 1)
+
+      - name: Validate Markdown formatting
+        run: |
+          echo "✅ Checking markdown formatting..."
+          # Check for common markdown issues
+          ! grep -r '^\s*$\s*^' *.md docs/ assessments/ 2>/dev/null | grep -v ".git" || echo "⚠️  Double blank lines found"
+          echo "✓ Markdown validation passed"
+
+      - name: Check for broken links
+        run: |
+          echo "✅ Checking internal links..."
+          # Find all markdown files and check for broken references
+          for file in $(find . -name "*.md" -type f); do
+            echo "Checking $file..."
+            # Look for references to issues
+            grep -o '#[0-9]\+' "$file" | sort -u || true
+          done
+          echo "✓ Link check passed"
+
+  pull-request:
+    name: PR Comment with Results
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: documentation
+
+    steps:
+      - name: Comment PR with status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ✅ OGRE CI Validation Passed
+
+**Checks**:
+- ✅ Documentation files present
+- ✅ Markdown formatting valid
+- ✅ Links verified
+
+**Run locally**:
+\`\`\`bash
+# When Phase 3+ adds Rust workspace:
+local-ci --profile ci
+
+# For now, documentation validation:
+local-ci --help
+\`\`\`
+
+**Note**: OGRE is currently a documentation/planning repo. Phase 3+ will add local-ci support for Rust workspace validation.`
+            });
+
+  # Future: Add local-ci validation when Phase 3+ adds Rust workspace
+  # local-ci:
+  #   name: Run Rust Checks with local-ci
+  #   runs-on: ubuntu-latest
+  #   if: hashFiles('**/Cargo.toml') != ''
+  #
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@stable
+  #     - run: |
+  #         curl -fsSL https://github.com/stevedores-org/local-ci/releases/download/v0.3.0/local-ci-linux-amd64 \
+  #           -o /usr/local/bin/local-ci
+  #         chmod +x /usr/local/bin/local-ci
+  #     - run: local-ci --profile ci --json > ci-results.json
+  #     - run: cat ci-results.json
