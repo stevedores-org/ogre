@@ -37,17 +37,34 @@
 #### ⚠️ Partial Implementation
 - **Checkpointing & Resumability** (Roadmap)
   - Architecture exists (SurrealDB, in-memory)
-  - Not fully tested or documented
+  - ⚠️ **Tested**: In-memory works; SurrealDB not production-tested
+  - ⚠️ **Documented**: File format undocumented
+  - **Note**: Test with multi-step workflows before Phase 3
 
 ### Gaps for Code Agents
 
-| Gap | Impact | Severity |
-|-----|--------|----------|
-| No approval gates | Can't pause for user approval | HIGH |
-| No plan validation | Can't validate before execution | HIGH |
-| Limited observability | Hard to debug decisions | MEDIUM |
-| No explicit timeouts | Long-running ops problematic | MEDIUM |
-| No visualization | No workflow debugging UI | LOW |
+| Gap | Impact | Severity | Phase 2 Issue |
+|-----|--------|----------|---------------|
+| No approval gates | Can't pause for user approval | HIGH | #32 (Core) |
+| No plan validation | Can't validate before execution | HIGH | #35 (Planning) |
+| Limited observability | Hard to debug decisions | MEDIUM | #36 (Observability) |
+| No explicit timeouts | Long-running ops problematic | MEDIUM | #34 (Execution) |
+| No visualization | No workflow debugging UI | LOW | Future |
+
+**Gap Code Examples**:
+
+Approval gates (desired):
+```rust
+async fn pause_for_approval(&self, decision: &str) -> Result<bool>;
+// Current: No native pause mechanism
+```
+
+Observability (desired):
+```rust
+let span = tracing::info_span!("decision", node = "approval");
+let _guard = span.enter();
+// Current: Basic tracing not wired to decisions
+```
 
 ### Key Questions Answered
 
@@ -66,12 +83,30 @@
 **Q5: How does it handle tool failures?**
 ⚠️ Via Result types; retry logic needs implementation
 
+### Performance & Scaling
+
+| Metric | Current | Target | Status |
+|--------|---------|--------|--------|
+| Node latency | <50ms | <100ms | ✅ |
+| Max iterations | Configurable | 100+ | ✅ |
+| Concurrent workflows | Multi-threaded | 1000+ | ⚠️ TBD |
+| Memory per workflow | ~5-10MB | <20MB | ✅ |
+
 ### Recommendation
 
-**INTEGRATE** oxidizedgraph as core execution engine.
+✅ **INTEGRATE** oxidizedgraph as core execution engine.
 
-**Action**: Add approval gates and planning layers on top in OGRE Phase 3 (Issues #32, #35).
+**Phase 2** (Design layers):
+- Issue #32: OGRE Core - Approval gates & state management
+- Issue #35: Planning - Plan validation
+- Issue #36: Observability - Wire tracing to decisions
+
+**Phase 3** (Test & validate):
+- Checkpoint/resume with multi-step workflows
+- Concurrent workflow safety
+- Integration with code retrieval (Issue #27)
 
 ---
 
-**Assessment Document**: See [PHASE_1_ASSESSMENT.md](./PHASE_1_ASSESSMENT.md) for complete analysis.
+**Related**: Issues #32, #35, #36, #27
+**Assessment**: See [PHASE_1_ASSESSMENT.md](./PHASE_1_ASSESSMENT.md) for complete analysis.
