@@ -1,21 +1,29 @@
 # 🧟 OGRE - Orchestrated GraphRAG Engineering
 
-**An integration evaluation framework for autonomous AI code builders combining knowledge retrieval (oxidizedRAG) and workflow orchestration (oxidizedgraph).**
+**Integration wiring layer for autonomous code agents within the [lornu.ai](https://github.com/lornu-ai/lornu.ai) ecosystem.**
+
+OGRE connects knowledge retrieval (oxidizedRAG), workflow orchestration (oxidizedgraph), and persistent storage (data-fabric) to enable agents that understand, analyze, and safely modify code.
 
 ---
 
 ## 🎯 Mission
 
-Evaluate how [oxidizedRAG](https://github.com/stevedores-org/oxidizedRAG) (knowledge graph retrieval system) and [oxidizedgraph](https://github.com/stevedores-org/oxidizedgraph) (LangGraph-like orchestration) can converge into a production-ready framework for **autonomous agents that understand, analyze, and modify code**.
+Enable autonomous code agents to be **productive, safe, and explainable** by architecting the integration between:
+- **oxidizedRAG**: Knowledge graph retrieval at scale
+- **oxidizedgraph**: Agent workflow orchestration
+- **data-fabric**: Persistent knowledge & audit trails
+- **lornu.ai**: Multi-cloud autonomous infrastructure
+
+Within the broader lornu.ai ecosystem for infrastructure automation.
 
 ## 📋 What's Here
 
-- **[PLAN.md](./PLAN.md)** - Detailed evaluation plan with 5 phases:
-  - Phase 1: Assessment of both projects
-  - Phase 2: Gap analysis for agentic code builders
-  - Phase 3: Architecture design
-  - Phase 4: Prototype (PR reviewer agent)
-  - Phase 5: Production hardening
+- **[PLAN.md](./PLAN.md)** - Integration wiring plan with 5 phases:
+  - Phase 1: Assessment of oxidizedRAG, oxidizedgraph, data-fabric
+  - Phase 2: Gap analysis for code-specific agent workflows
+  - Phase 3: OGRE architecture & integration contracts
+  - Phase 4: Prototype (autonomous PR reviewer)
+  - Phase 5: Production hardening & deployment
 
 ## 🔑 Key Questions
 
@@ -35,21 +43,46 @@ cat PLAN.md
 # Survey oxidizedRAG & oxidizedgraph capabilities
 ```
 
-## 📚 Related Projects
+## 🏗️ Ecosystem Architecture
 
-- [oxidizedRAG](https://github.com/stevedores-org/oxidizedRAG) - Knowledge graph retrieval system
-- [oxidizedgraph](https://github.com/stevedores-org/oxidizedgraph) - Workflow orchestration engine
-- [aivcs](https://github.com/stevedores-org/aivcs) - AI Agent Version Control System
+```
+lornu.ai (Multi-cloud autonomous infrastructure)
+    ├─ OGRE (Code agent wiring) ← YOU ARE HERE
+    │   ├─ oxidizedRAG (retrieval)
+    │   ├─ oxidizedgraph (orchestration)
+    │   └─ data-fabric (persistence)
+    ├─ aivcs (Agent version control)
+    ├─ bond (Agent testing)
+    └─ lornu-ai-cleaner (Data safety)
+```
+
+## 📚 Core Projects
+
+**Integration Targets**:
+- [oxidizedRAG](https://github.com/stevedores-org/oxidizedRAG) - Knowledge graph retrieval (code-aware)
+- [oxidizedgraph](https://github.com/stevedores-org/oxidizedgraph) - Workflow orchestration (agent lifecycle)
+- [data-fabric](https://github.com/stevedores-org/data-fabric) - Schema governance & persistence
+
+**Supporting Infrastructure**:
+- [aivcs](https://github.com/stevedores-org/aivcs) - Agent run tracking & version control
 - [bond](https://github.com/stevedores-org/bond) - Agent testing framework
+- [lornu.ai](https://github.com/lornu-ai/lornu.ai) - Multi-cloud platform & shared agent swarm
 
-## 💡 Vision
+## 💡 What OGRE Does
 
-Enable autonomous AI agents to be productive, safe, and understandable when working with real codebases. Not just code completion, but:
-- Understanding code intent and architecture
-- Identifying breaking changes before executing
-- Explaining decisions in human-readable terms
-- Learning patterns from past successes/failures
+OGRE is **not** a framework — it's the **wiring** that enables:
+
+1. **Context Retrieval**: Query codebases semantically via oxidizedRAG
+2. **Workflow Execution**: Run agent decisions through oxidizedgraph
+3. **Safe Modifications**: Execute code changes with validation & rollback
+4. **Knowledge Persistence**: Store agent learnings in data-fabric
+5. **Auditable Decisions**: Full traceability of agent reasoning
+6. **Integration**: Connect to lornu.ai's autonomous agent swarm
 
 ## 🤝 Contributing
 
-This is an active evaluation project. Feedback on the plan and gaps is welcome!
+This is an active integration project. Contributions welcome in:
+- Gap analysis & assessment
+- Integration contract design
+- Prototype implementation
+- Testing & validation
