@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  local-ci:
+    name: Run local-ci checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Install local-ci
+        run: go install github.com/stevedores-org/local-ci@latest
+
+      - name: Run CI checks
+        id: ci
+        run: |
+          local-ci --no-cache --json > ci-results.json 2>&1 || true
+          cat ci-results.json
+
+      - name: Parse and post results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('ci-results.json', 'utf8'));
+
+            const passed = results.results?.filter(r => r.status === 'passed')?.length ?? 0;
+            const failed = results.results?.filter(r => r.status === 'failed')?.length ?? 0;
+            const total = results.results?.length ?? 0;
+
+            let summary = `## CI Results\n\n`;
+            summary += `| Status | Count |\n`;
+            summary += `|--------|-------|\n`;
+            summary += `| ✅ Passed | ${passed} |\n`;
+            summary += `| ❌ Failed | ${failed} |\n`;
+            summary += `| 📊 Total | ${total} |\n\n`;
+
+            if (results.results && results.results.length > 0) {
+              summary += `### Details\n\n`;
+              results.results.forEach(result => {
+                const icon = result.status === 'passed' ? '✅' : '❌';
+                const duration = result.duration_ms ? ` (${result.duration_ms}ms)` : '';
+                summary += `${icon} **${result.name}**${duration}\n`;
+                if (result.error) {
+                  summary += `\n\`\`\`\n${result.error}\n\`\`\`\n`;
+                }
+              });
+            }
+
+            // Post as comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            }).catch(err => {
+              // Ignore error if not a PR
+              console.log('Skipping comment (not a PR context)');
+            });
+
+      - name: Fail if checks failed
+        if: failure() && github.event_name == 'pull_request'
+        run: exit 1
