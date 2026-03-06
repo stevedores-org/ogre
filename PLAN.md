@@ -1,340 +1,496 @@
-# OGRE - Orchestrated GraphRAG Evaluation & Engineering
-## Integration Plan: oxidizedRAG + oxidizedgraph for Agentic Code Builder Orchestration
+# OGRE - Orchestrated GraphRAG Engineering
+## Integration Wiring for Autonomous Code Agents within lornu.ai
 
 ---
 
 ## 📋 Executive Summary
 
-**Objective**: Evaluate the convergence of oxidizedRAG (knowledge graph retrieval) and oxidizedgraph (LangGraph-like orchestration) to identify integration points and gaps needed for autonomous AI agentic code builders.
+**What is OGRE?**
+OGRE is the **integration wiring layer** that connects knowledge retrieval (oxidizedRAG), workflow orchestration (oxidizedgraph), and persistent knowledge storage (data-fabric) to enable autonomous AI agents for code understanding, analysis, and modification within the **lornu.ai** ecosystem.
+
+**Mission**:
+Enable autonomous code agents to be **productive, safe, and explainable** by:
+1. Retrieving relevant code context at scale (oxidizedRAG)
+2. Orchestrating agent decisions and actions (oxidizedgraph)
+3. Persisting learned knowledge and patterns (data-fabric)
+4. Executing code modifications safely and idempotently
+
+**NOT a framework** — a connector between existing stevedores-org + lornu-ai projects
 
 **Scope**:
-- Assess current capabilities of both projects
-- Identify integration opportunities
-- Map gaps in agentic orchestration, particularly for code generation/modification workflows
-- Propose unified framework for AI agent reasoning + action orchestration
+- Define integration contracts between components
+- Identify and fill gaps in code-specific agent workflows
+- Design safety, observability, and reproducibility patterns
+- Prototype: Autonomous PR reviewer agent
 
-**Timeline**: Phased evaluation and prototyping
-**Outcome**: Production-ready orchestration framework for autonomous code agents
+**Outcome**: Production-ready wiring for autonomous code agents integrated into lornu.ai
 
 ---
 
-## 🎯 Phase 1: Assessment & Gap Analysis (Week 1-2)
+## 🏗️ Architecture Context
 
-### 1.1 oxidizedRAG Current State
-**Location**: `/Users/stevenirvin/engineering/code/vs-code/oxidizedRAG`
+### Ecosystem Components
 
-**Capabilities to Evaluate**:
-- [ ] Knowledge graph construction from multi-document sources
-- [ ] Vector embedding & retrieval strategies (basic, graph, hybrid, pagerank)
-- [ ] LLM integration points (Ollama, vLLM)
-- [ ] WASM compilation & browser deployment
-- [ ] Async trait abstractions
-- [ ] SurrealDB persistence layer
-- [ ] Incremental indexing capabilities
-- [ ] API module (Axum-based)
+```
+┌──────────────────────────────────────────────────┐
+│        lornu.ai Infrastructure Platform          │
+│  (Multi-cloud, agent swarm, governance, OIDC)    │
+└──────────────┬───────────────────────────────────┘
+               │
+   ┌───────────┼───────────┬──────────────┐
+   │           │           │              │
+   ▼           ▼           ▼              ▼
+ OGRE        aivcs      bond          lornu-ai-cleaner
+(Code Agent) (Agent VCS) (Testing)    (Data Safety)
+   │
+   ├─ oxidizedRAG (retrieval)
+   ├─ oxidizedgraph (orchestration)
+   └─ data-fabric (persistence)
+```
 
-**Key Questions**:
-1. What retrieval latency is achievable for typical code corpus (100K+ files)?
-2. How well does it handle heterogeneous document types (code, docs, issues)?
-3. What's the memory footprint for WASM version?
-4. How extensible is the embedding provider interface?
+### Component Roles
 
-### 1.2 oxidizedgraph Current State
-**Location**: https://github.com/stevedores-org/oxidizedgraph
+| Component | Role | Owner | Status |
+|-----------|------|-------|--------|
+| **oxidizedRAG** | Knowledge graph retrieval for code context | stevedores-org | Active |
+| **oxidizedgraph** | LangGraph-like workflow orchestration | stevedores-org | Active |
+| **data-fabric** | Schema validation & persistent knowledge | stevedores-org | Active |
+| **OGRE** | Integration wiring + safety layer | stevedores-org | Planned |
+| **aivcs** | Agent version control & run tracking | stevedores-org | Active |
+| **bond** | Agent testing framework | stevedores-org | Active |
+| **lornu.ai** | Autonomous infrastructure platform | lornu-ai | Active |
 
-**Capabilities to Evaluate**:
+---
+
+## 🔗 Integration Points (The "Wiring")
+
+### 1. oxidizedRAG ← OGRE → oxidizedgraph
+
+**Retrieval to Orchestration**:
+```rust
+// Pseudo-code
+agent_input: "Review PR #42"
+  ↓
+[OGRE] Load diff & extract affected files
+  ↓
+[oxidizedRAG] Retrieve relevant code context
+  - Similar patterns from codebase
+  - Related modules & dependencies
+  - Test files & coverage info
+  ↓
+[oxidizedgraph] Plan agent decisions
+  - Analyze: lint, type-check, security scan
+  - Generate: review comments with reasoning
+  - Suggest: auto-fixable issues
+  ↓
+[OGRE] Execute actions (file I/O, git ops)
+  ↓
+[oxidizedRAG] Re-index modified code
+  ↓
+[oxidizedgraph] Validate: re-run analysis
+  ↓
+Result: PR review with traceability
+```
+
+### 2. data-fabric Integration
+
+**Schema Governance** (from lornu.ai CLAUDE.md):
+- All code modifications tracked in data-fabric schema
+- Agent reasoning & decisions stored as audit trail
+- Codebase analysis cached & versioned
+- Knowledge base for learned patterns
+
+**Key Types**:
+```rust
+// Example schema (to be defined in data-fabric)
+struct CodeModification {
+    file_path: String,
+    change_type: ChangeType,  // Add, Modify, Delete
+    diff: String,
+    reasoning: String,
+    test_status: TestResult,
+    approval_status: ApprovalStatus,
+}
+
+struct AgentRun {
+    id: UUID,
+    agent_type: AgentType,
+    codebase_hash: String,
+    decisions: Vec<Decision>,
+    actions: Vec<Action>,
+    outcome: Outcome,
+    cost: Cost,
+}
+```
+
+### 3. lornu.ai Integration
+
+**Agent Swarm Orchestration**:
+- OGRE agents register with lornu.ai's shared state
+- Multi-agent coordination via `.lornu/STATE.json`
+- Autonomous workflow execution with human approval gates
+- Zero-Trust OIDC for all operations
+
+**Deployment**:
+- Nix flakes for reproducible builds (lornu.ai pattern)
+- Attic/R2 caching for binaries
+- Multi-environment promotion: dev → staging → prod
+- Flux/ArgoCD for GitOps deployment
+
+---
+
+## 🎯 Phase 1: Integration Assessment (Week 1-2)
+
+### 1.1 oxidizedRAG Evaluation
+
+**Current Capabilities**:
+- [ ] Multi-document knowledge graph construction
+- [ ] Retrieval strategies: basic, graph, hybrid, pagerank
+- [ ] LLM integration: Ollama, vLLM
+- [ ] WASM compilation
+- [ ] SurrealDB persistence
+- [ ] Incremental indexing
+- [ ] Axum API module
+
+**Code-Specific Questions**:
+1. How does it handle code semantics? (AST preservation, function-level granularity?)
+2. Can it track cross-file dependencies? (imports, type relationships?)
+3. How are code changes detected & indexed? (incremental vs full reindex?)
+4. What's the latency for "find all callers of function X"?
+
+**Integration Checklist**:
+- [ ] Can retrieve context in < 500ms
+- [ ] Handles 100K+ LOC codebases
+- [ ] Supports code-specific queries
+- [ ] Integrates with data-fabric schema
+
+### 1.2 oxidizedgraph Evaluation
+
+**Current Capabilities**:
 - [ ] Graph-based workflow definitions
 - [ ] Agent state management
 - [ ] Branching/conditional logic
-- [ ] Tool/function calling interface
+- [ ] Tool/function calling
 - [ ] Error handling & retries
-- [ ] Event streaming/observability
+- [ ] Event streaming
 - [ ] Checkpointing & resumability
 
-**Key Questions**:
-1. How does it compare to LangGraph's execution model?
-2. What's the learning curve for defining complex agent workflows?
-3. How well does it support long-running operations?
-4. What observability/debugging capabilities exist?
+**Code Agent Questions**:
+1. How complex can workflows get? (nested conditionals, long-running tasks?)
+2. How is state persisted? (checkpoints, resumability across restarts?)
+3. What debugging/observability exists? (tracing, visualization?)
+4. Can it handle human-in-the-loop approval gates?
 
-### 1.3 Integration Assessment Matrix
-Document compatibility across:
-- Data models (graph schema alignment)
-- Type systems (serialization, trait bounds)
-- Error handling (propagation, recovery)
-- Async runtime (tokio compatibility)
-- Testing infrastructure
-- Documentation & examples
+**Integration Checklist**:
+- [ ] Supports agent lifecycle (init → plan → execute → validate)
+- [ ] Can checkpoint mid-workflow
+- [ ] Integrates with observability stack
+- [ ] Supports conditional logic based on code analysis
+
+### 1.3 data-fabric Assessment
+
+**Current State**:
+- [ ] Schema registry (what exists?)
+- [ ] Persistence layer (SurrealDB, vector DB?)
+- [ ] Type safety mechanisms
+- [ ] Governance patterns
+
+**Needed for OGRE**:
+- [ ] CodeModification schema
+- [ ] AgentRun tracking schema
+- [ ] Codebase analysis cache schema
+- [ ] Agent decision audit trail schema
 
 ---
 
-## 🔗 Phase 2: Gap Identification for Agentic Code Builders (Week 2-3)
+## 🔄 Phase 2: Gap Analysis (Week 2-3)
 
-### 2.1 Context Window Management
-**Gap**: How do we manage:
-- [ ] Large code context (repo-wide understanding)
-- [ ] Relevance-ranked retrieval within limited tokens
-- [ ] Multi-turn conversation with code modifications
-- [ ] Caching of computed embeddings/analysis
+### 2.1 Code-Specific Retrieval Gaps
 
-**Use Case**: Agent modifies 5 files across 3 services; needs updated context after each modification.
+**Current State**: Document-agnostic retrieval
 
-### 2.2 Code-Specific Retrieval
-**Gap**: Current retrieval is document-agnostic. Needed:
+**Needed for Code Agents**:
 - [ ] AST-aware chunking (preserve semantic boundaries)
 - [ ] Function/class/module-level retrieval
-- [ ] Dependency tracking (imports, type relationships)
-- [ ] Change impact analysis (what code changed, what might break?)
+- [ ] Dependency graph tracking
+- [ ] Change impact analysis
 - [ ] Test-to-code linkage
 
-**Use Case**: Agent needs to find all places a function is called before modifying it.
+**Action**: Extend oxidizedRAG with code-specific indexing
 
-### 2.3 Agent Action Execution
-**Gap**: orchestration layer needs:
-- [ ] File I/O operations (read, write, diff)
-- [ ] Code analysis tooling (parse, lint, type-check)
-- [ ] Compilation/build feedback
-- [ ] Test execution & failure analysis
-- [ ] Git operations (branch, commit, diff)
+### 2.2 Agent Workflow Gaps
 
-**Use Case**: Agent writes code, runs tests, sees failures, uses results to refine approach.
+**Current State**: Graph-based workflows, basic tools
 
-### 2.4 Plan Generation & Refinement
-**Gap**: No explicit planning phase:
-- [ ] Break down code modifications into steps
+**Needed for Code Agents**:
+- [ ] File I/O safety (read/write isolation)
+- [ ] Code execution environment (sandboxing)
+- [ ] Build feedback integration
+- [ ] Test result aggregation
+- [ ] Git operation handling
+
+**Action**: Design OGRE action execution layer
+
+### 2.3 Plan Generation Gaps
+
+**Current State**: No explicit planning phase
+
+**Needed for Code Agents**:
+- [ ] Break down modifications into steps
 - [ ] Estimate complexity/risk
-- [ ] Validate approach before execution
-- [ ] Adapt plan based on failures
+- [ ] Generate human-readable plans
+- [ ] Support approval workflows
+- [ ] Adapt plans based on failures
 
-**Use Case**: Complex refactoring should generate multi-step plan, get user approval, then execute.
+**Action**: Design planning module (LLM + rule-based)
 
-### 2.5 Observability & Debugging
-**Gap**: For long-running agentic workflows:
-- [ ] Structured tracing of agent decisions
-- [ ] Visualization of graph execution
+### 2.4 Knowledge Persistence Gaps
+
+**Current State**: Per-session analysis
+
+**Needed for Code Agents**:
+- [ ] Codebase analysis caching (AST, types, metrics)
+- [ ] Agent reasoning storage (decisions, outcomes)
+- [ ] Pattern learning (what worked, what failed)
+- [ ] Cost tracking (tokens, API calls)
+- [ ] Incremental updates on code changes
+
+**Action**: Integrate data-fabric for persistence
+
+### 2.5 Observability Gaps
+
+**Current State**: Limited debugging
+
+**Needed for Code Agents**:
+- [ ] Structured tracing (OpenTelemetry)
+- [ ] Decision visualization
 - [ ] Replay/rewind capabilities
-- [ ] Cost tracking (token usage, API calls)
-- [ ] Human-in-the-loop intervention points
+- [ ] Cost tracking per agent
+- [ ] Human intervention points
 
-### 2.6 Knowledge Persistence
-**Gap**: Learning across sessions:
-- [ ] Store codebase analysis (AST, types, metrics)
-- [ ] Cache agent reasoning (what worked, what failed)
-- [ ] Build reputation/confidence scores for patterns
-- [ ] Incremental updates as code changes
+**Action**: Design observability stack (traces, metrics, dashboards)
 
----
+### 2.6 Safety Gaps
 
-## 🏗️ Phase 3: Architecture Design (Week 3-4)
+**Current State**: No isolation mechanism
 
-### 3.1 Proposed Integration Architecture
+**Needed for Code Agents**:
+- [ ] Sandboxed execution
+- [ ] Change rollback capability
+- [ ] Validation before execution
+- [ ] Audit trail
+- [ ] Permission model (what agents can modify)
 
-```
-┌─────────────────────────────────────────────┐
-│         AI Agent Interface Layer             │
-│  (High-level agent definitions & reasoning)  │
-└──────────────┬──────────────────────────────┘
-               │
-     ┌─────────┼─────────┐
-     │         │         │
-     ▼         ▼         ▼
-┌─────────────────────────────────────────────┐
-│          OGRE Orchestration Core             │
-│  (Graph-based workflow execution engine)     │
-├─────────────────────────────────────────────┤
-│  • State machine for agent lifecycle         │
-│  • Tool/action dispatcher                    │
-│  • Error recovery & retries                  │
-│  • Plan validation & approval gates          │
-└──────────┬────────────────────────────────┬─┘
-           │                                │
-     ┌─────▼────────────┐        ┌────────▼────────────┐
-     │                  │        │                     │
-     ▼                  ▼        ▼                     ▼
-┌──────────────┐  ┌──────────────────┐   ┌─────────────────────┐
-│ oxidizedRAG  │  │ Code Tools Layer  │   │  Action Executors   │
-│              │  │                   │   │                     │
-│ • Retrieval  │  │ • AST parsing     │   │ • File I/O          │
-│ • Embedding  │  │ • Lint/format     │   │ • Compilation       │
-│ • Persistence│  │ • Type checking   │   │ • Testing           │
-└──────────────┘  │ • Diff analysis   │   │ • Git operations    │
-                  └──────────────────┘   └─────────────────────┘
-```
-
-### 3.2 Core Components
-
-**OGRE Engine**:
-- Workflow graph definition (node types: decision, action, tool-call)
-- State persistence (checkpointing, resumability)
-- Event stream (audit trail, debugging)
-- Resource management (token budgets, timeouts)
-
-**Code Integration Module**:
-- Codebase indexing (AST + semantic analysis)
-- Change impact detection
-- Test coverage mapping
-- Dependency graph
-
-**Action Execution Layer**:
-- Tool registry & dispatching
-- Sandbox/safety isolation
-- Result aggregation & feedback
-- Error classification & recovery
-
-**Observability Stack**:
-- Structured logging (OpenTelemetry)
-- Metrics (decisions made, actions executed, success rate)
-- Tracing (execution timeline, branching)
-- UI/API for workflow visualization
+**Action**: Design safety & isolation layer
 
 ---
 
-## 📝 Phase 4: Prototype & Validation (Week 4-6)
+## 🏗️ Phase 3: OGRE Architecture (Week 3-4)
 
-### 4.1 Prototype Scope: AI Code Reviewer Agent
-
-**Scenario**: Agent reviews PR, suggests improvements, optionally auto-fix
-
-**Workflow**:
-1. Load PR diff & affected files
-2. Retrieve relevant code context (similar patterns, related modules)
-3. Analyze: lint, type-check, security scan
-4. Generate review comments with reasoning
-5. Suggest fixes for auto-fixable issues
-6. Execute fixes (with user approval)
-7. Re-run analysis to confirm
-
-**Success Metrics**:
-- [ ] Can analyze 10K+ LOC codebases
-- [ ] Retrieval latency < 500ms
-- [ ] Plan generation < 2s
-- [ ] Action execution (lint/fmt) < 5s
-- [ ] Full cycle < 30s
-
-### 4.2 Test Scenarios
-- [ ] Single-file modification (straightforward)
-- [ ] Multi-file refactoring (complex dependencies)
-- [ ] Large codebase (performance test)
-- [ ] Failing tests feedback loop
-- [ ] Concurrent agent operations (safety)
-- [ ] Long-running workflow with interruption
-
-### 4.3 Validation Checklist
-- [ ] oxidizedRAG retrieval > 95% relevant results (top-5)
-- [ ] Agent decisions explainable (reasoning in trace)
-- [ ] Workflow reproducible (deterministic)
-- [ ] No token limit breaches in typical scenarios
-- [ ] Error recovery works for transient failures
-- [ ] Human can interrupt & modify plan mid-workflow
-
----
-
-## 📊 Phase 5: Integration & Hardening (Week 6+)
-
-### 5.1 Integration Tasks
-- [ ] Unified error types across components
-- [ ] Shared configuration (TOML-based)
-- [ ] Common trait abstractions
-- [ ] Async runtime consolidation
-- [ ] Test harness for full workflows
-
-### 5.2 Production Readiness
-- [ ] Comprehensive test coverage (unit + integration)
-- [ ] Benchmarks for latency-critical paths
-- [ ] Documentation (architecture, API, examples)
-- [ ] Security audit (code execution safety)
-- [ ] Performance tuning (memory, CPU, tokens)
-
-### 5.3 Extended Use Cases (Post-MVP)
-- [ ] Code generation (new features)
-- [ ] Test generation
-- [ ] Documentation generation
-- [ ] Refactoring automation
-- [ ] Dependency upgrade automation
-
----
-
-## 🔧 Technical Decisions to Make
-
-| Decision | Options | Tradeoffs |
-|----------|---------|-----------|
-| **AST Parser** | tree-sitter vs syn vs custom | tree-sitter: flexible; syn: Rust-only; custom: simple but limited |
-| **Codebase Indexing** | Pre-compute vs on-demand | Pre-compute: fast; on-demand: memory-efficient |
-| **Workflow Serialization** | JSON vs TOML vs custom | TOML: human-friendly; JSON: lightweight; custom: type-safe |
-| **Plan Validation** | LLM-based vs rule-based | LLM: flexible; rules: deterministic |
-| **Safety Isolation** | Containers vs seccomp vs sandboxing | Containers: strong; seccomp: lightweight; sandboxing: OS-specific |
-
----
-
-## 📂 Repository Structure
+### 3.1 Core Modules
 
 ```
 ogre/
-├── PLAN.md                    (this file)
-├── ARCHITECTURE.md            (detailed design)
 ├── crates/
-│   ├── ogre-core/             (orchestration engine)
-│   ├── ogre-code-tools/       (code analysis)
-│   ├── ogre-actions/          (action executors)
-│   └── ogre-observability/    (tracing & metrics)
-├── examples/
-│   └── pr-reviewer-agent/     (prototype)
-├── benches/                   (performance tests)
-└── docs/                      (usage guides)
+│   ├── ogre-core/              # Integration orchestration
+│   │   ├── agent_lifecycle     # Init, plan, execute, validate
+│   │   ├── workflow_executor   # Graph execution engine
+│   │   └── safety_gates        # Validation, approval, rollback
+│   │
+│   ├── ogre-retrieval/         # oxidizedRAG integration
+│   │   ├── code_indexer        # AST-aware indexing
+│   │   ├── semantic_search     # Code-aware queries
+│   │   └── impact_analyzer     # Change impact detection
+│   │
+│   ├── ogre-execution/         # Action execution layer
+│   │   ├── file_ops            # Safe file I/O
+│   │   ├── code_tools          # Lint, fmt, type-check
+│   │   ├── test_runner         # Test execution & parsing
+│   │   └── git_ops             # Branch, commit, diff
+│   │
+│   ├── ogre-planning/          # Plan generation
+│   │   ├── decomposer          # Break tasks into steps
+│   │   ├── estimator           # Complexity/risk analysis
+│   │   └── validator           # Plan feasibility checks
+│   │
+│   ├── ogre-observability/     # Tracing & metrics
+│   │   ├── tracer              # OpenTelemetry integration
+│   │   ├── metrics             # Agent performance metrics
+│   │   └── dashboard           # Web UI for visualization
+│   │
+│   └── ogre-fabric/            # data-fabric integration
+│       ├── schema_types        # Code agent schemas
+│       ├── persistence         # Store/retrieve knowledge
+│       └── audit_trail         # Track all decisions
+```
+
+### 3.2 Integration Contracts
+
+**oxidizedRAG → OGRE**:
+```rust
+trait CodeRetriever {
+    async fn retrieve_context(&self, query: CodeQuery) -> Result<CodeContext>;
+    async fn find_callers(&self, fn_name: &str) -> Result<Vec<CodeLocation>>;
+    async fn detect_impact(&self, changes: &[Change]) -> Result<ImpactAnalysis>;
+}
+```
+
+**OGRE → oxidizedgraph**:
+```rust
+trait AgentOrchestrator {
+    async fn execute_workflow(&self, workflow: Workflow) -> Result<WorkflowResult>;
+    async fn get_agent_state(&self, agent_id: &str) -> Result<AgentState>;
+    async fn checkpoint(&self, agent_id: &str, state: AgentState) -> Result<()>;
+}
+```
+
+**OGRE → data-fabric**:
+```rust
+trait KnowledgeStore {
+    async fn store_run(&self, run: AgentRun) -> Result<()>;
+    async fn query_patterns(&self, pattern: &str) -> Result<Vec<Pattern>>;
+    async fn cache_analysis(&self, codebase: &str, analysis: Analysis) -> Result<()>;
+}
+```
+
+### 3.3 Execution Flow
+
+```
+Agent Decision Loop:
+  1. INIT: Load codebase, agent context
+  2. RETRIEVE: oxidizedRAG contextual search
+  3. REASON: oxidizedgraph workflow execution
+  4. PLAN: Decompose task → multi-step plan
+  5. VALIDATE: Check feasibility, get approval
+  6. EXECUTE: Run actions (file I/O, tests, git)
+  7. OBSERVE: Log all decisions & outcomes
+  8. LEARN: Store patterns in data-fabric
+  9. ITERATE: Adapt if failures detected
 ```
 
 ---
 
-## 🎓 Learning Outcomes
+## 🧪 Phase 4: Prototype - Code Review Agent (Week 4-5)
 
-By completing this evaluation, we'll understand:
-1. **How to build reliable AI agents** that modify real code
-2. **What retrieval semantics matter** for code understanding
-3. **How to make agents explainable** to human reviewers
-4. **What safety guarantees we need** for code execution
-5. **How to iterate on agentic workflows** efficiently
+### 4.1 Scenario
+
+**Goal**: Autonomous PR review agent that:
+1. Reviews PR diffs for issues
+2. Retrieves relevant code context
+3. Analyzes with lint/type-check/security scan
+4. Generates human-readable review comments
+5. Suggests auto-fixable issues
+6. Optionally executes fixes (with approval)
+7. Re-validates after changes
+
+### 4.2 Success Metrics
+
+- [ ] Analyzes 10K+ LOC codebases
+- [ ] Retrieval latency < 500ms
+- [ ] Plan generation < 2s
+- [ ] Action execution < 5s
+- [ ] Full cycle < 30s
+- [ ] Review quality > 95% (manual eval)
+- [ ] Zero false negatives (missed critical issues)
+
+### 4.3 Test Scenarios
+
+- [ ] Single-file modification
+- [ ] Multi-file refactoring (complex dependencies)
+- [ ] Large codebase (performance)
+- [ ] Failing tests feedback loop
+- [ ] Long-running workflow with interruption
+- [ ] Error recovery & rollback
 
 ---
 
-## 🚀 Success Criteria
+## 🚀 Phase 5: Production Hardening (Week 5+)
 
-- [ ] Gap analysis document completed
-- [ ] Architecture document written & approved
-- [ ] PR reviewer prototype functional
+### 5.1 Integration Tasks
+
+- [ ] Unify error types across OGRE modules
+- [ ] Create shared TOML configuration
+- [ ] Consolidate async runtime
+- [ ] Build comprehensive test harness
+- [ ] Nix flakes for reproducible builds
+- [ ] Attic/R2 caching
+
+### 5.2 Production Readiness
+
+- [ ] Security audit (code execution safety)
+- [ ] Benchmarks for latency-critical paths
+- [ ] Performance tuning (memory, tokens, throughput)
+- [ ] Comprehensive documentation
+- [ ] Integration tests with real codebases
+- [ ] Cost analysis (token usage, API calls)
+
+### 5.3 Deployment
+
+- [ ] Multi-environment rollout (dev → staging → prod)
+- [ ] Integration with lornu.ai agent swarm
+- [ ] Zero-Trust OIDC authentication
+- [ ] Multi-cloud support (GCP, AWS, Azure)
+- [ ] Observability dashboards
+- [ ] Runbooks for common scenarios
+
+---
+
+## 📊 Technical Decisions
+
+| Decision | Options | Tradeoffs |
+|----------|---------|-----------|
+| **AST Parser** | tree-sitter vs syn | tree-sitter: multi-lang; syn: Rust-only |
+| **Codebase Indexing** | Pre-compute vs on-demand | Pre-compute: fast; on-demand: memory-efficient |
+| **Workflow Serialization** | TOML vs JSON | TOML: human-friendly; JSON: minimal |
+| **Isolation** | Containers vs seccomp | Containers: strong; seccomp: lightweight |
+| **Knowledge Store** | SurrealDB vs PostgreSQL | SurrealDB: graph-native; PostgreSQL: proven |
+
+---
+
+## 🎓 Expected Learnings
+
+1. How to architect safe, explainable autonomous code agents
+2. What code retrieval semantics matter for agent understanding
+3. How to make agent decisions auditable to humans
+4. What safety guarantees are sufficient for code execution
+5. How to iterate on agentic workflows efficiently
+
+---
+
+## 🚦 Success Criteria
+
+- [ ] Gap analysis complete with actionable items
+- [ ] Architecture documented & approved
+- [ ] Integration contracts defined & tested
+- [ ] Code review prototype functional
 - [ ] All success metrics met
-- [ ] Codebase integration points identified
-- [ ] Clear roadmap for production release
+- [ ] Production deployment ready
+- [ ] Clear roadmap for extended use cases
 
 ---
 
-## 📅 Next Steps
+## 🔗 Related Projects
 
-1. **This week**: Complete assessment phase (Phase 1)
-   - Survey oxidizedRAG & oxidizedgraph codebases
-   - Document current capabilities
-   - Identify quick wins for integration
-
-2. **Next week**: Gap analysis & architecture (Phase 2-3)
-   - Create integration matrix
-   - Design OGRE core components
-   - Define prototype scope
-
-3. **Weeks 3-4**: Prototype development
-   - Build PR reviewer agent
-   - Test with real codebases
-   - Iterate based on findings
+- **oxidizedRAG**: https://github.com/stevedores-org/oxidizedRAG
+- **oxidizedgraph**: https://github.com/stevedores-org/oxidizedgraph
+- **data-fabric**: https://github.com/stevedores-org/data-fabric
+- **aivcs**: https://github.com/stevedores-org/aivcs
+- **lornu.ai**: https://github.com/lornu-ai/lornu.ai
+- **bond**: https://github.com/stevedores-org/bond
 
 ---
 
-## 👥 Open Questions
+## 📝 Open Questions
 
-1. What's the primary use case? (PR review, refactoring, generation, testing?)
-2. Should OGRE be language-agnostic or Rust-focused?
-3. What's the user interface? (CLI, API, IDE plugin, web UI?)
-4. Should we integrate with existing services? (GitHub, GitLab, cloud providers?)
-5. What's the deployment model? (self-hosted, managed service, hybrid?)
+1. **Scope**: Is code review the right first use case? (vs. generation, testing, refactoring?)
+2. **Integration**: Should OGRE live in stevedores-org or lornu-ai?
+3. **Safety**: What code modifications should agents be able to make without approval?
+4. **Cost**: How do we track and optimize token usage per agent workflow?
+5. **Learning**: How do agents learn from past successes/failures?
+6. **Multi-tenancy**: Should OGRE support multiple codebases/teams simultaneously?
 
 ---
 
-**Status**: Draft - Ready for review & feedback
+**Status**: Revised Plan - Ready for Phase 1 assessment
 **Last Updated**: 2026-03-05
+**Architecture Version**: 2.0 (Ecosystem-aware)
