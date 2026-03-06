@@ -61,12 +61,81 @@
 **Q4: Extensible embedding interface?**
 ✅ Yes, pluggable EmbeddingProvider trait
 
+### Risk Mitigation Strategy
+
+| Gap | Mitigation | Phase 2 Owner |
+|-----|-----------|---------------|
+| AST-aware chunking | tree-sitter integration | Issue #27 |
+| Function-level retrieval | Custom entity extraction (functions, classes, modules) | Issue #27 |
+| Cross-file dependencies | Dependency parser + graph linking | Issue #27 |
+| Change impact analysis | Diff analyzer + impact propagation | Issue #28 |
+| Test-to-code linkage | Test metadata indexing | Phase 3 |
+
+### Testing Plan for Phase 1 Follow-up
+
+1. **Benchmark with Real Code Corpus**
+   - Index Rust monorepo (50K+ LOC)
+   - Measure indexing time vs codebase size
+   - Capture memory growth patterns
+   - **Success criteria**: <5min indexing for 50K LOC
+
+2. **Query Latency Under Load**
+   - 100 concurrent retrieve_context() calls
+   - Measure p50, p95, p99 latencies
+   - Profile CPU/memory saturation
+   - **Success criteria**: p99 < 500ms, memory < 500MB
+
+3. **Code-Specific Experiments**
+   - Index code with entity types: (function, class, module, import)
+   - Compare semantic vs syntactic embeddings
+   - Measure retrieval precision for "find all callers" pattern
+   - **Success criteria**: > 90% precision on known patterns
+
+### Integration Contract Details (Ref: Issue #26)
+
+**CodeRetriever Trait**:
+```rust
+trait CodeRetriever {
+    // Normalize code query to oxidizedRAG backend
+    async fn retrieve_context(&self,
+        query: CodeQuery,
+        limit: usize,
+        codebase_hash: &str
+    ) -> Result<Vec<CodeContext>>;
+
+    // Find specific code elements
+    async fn find_callers(&self,
+        fn_name: &str,
+        file_scope: Option<&str>
+    ) -> Result<Vec<CodeLocation>>;
+
+    // Detect code change impacts
+    async fn detect_impact(&self,
+        changes: &[FileChange]
+    ) -> Result<ImpactAnalysis>;
+}
+```
+
+**Embedding Strategy Decision Needed** (Phase 2):
+- Semantic embeddings: Preserve meaning, good for intent-based queries
+- Syntactic embeddings: Preserve structure, good for pattern matching
+- Hybrid: Both (higher cost, better coverage)
+
+### Phase 2 Handoff Checklist
+
+- [ ] Link this assessment to Issue #27 (Code-Specific Retrieval Gap)
+- [ ] Create test fixtures from code corpus assessment
+- [ ] Define success metrics for code-aware retrieval layer
+- [ ] Plan AST-aware chunking strategy
+- [ ] Plan dependency tracking implementation
+- [ ] Document embedding strategy decision
+
 ### Recommendation
 
 **INTEGRATE** oxidizedRAG as core retrieval backend.
 
-**Action**: Design code-specific retrieval layer in Phase 2 (Issue #27) to bridge gaps.
+**Status**: ✅ APPROVED - Ready for Phase 2 implementation of code-specific layer
 
 ---
 
-**Assessment Document**: See [PHASE_1_ASSESSMENT.md](./PHASE_1_ASSESSMENT.md) for complete analysis.
+**Assessment Document**: See [PHASE1_OXIDIZEDRAG_ASSESSMENT.md](../assessments/PHASE1_OXIDIZEDRAG_ASSESSMENT.md) for complete analysis.

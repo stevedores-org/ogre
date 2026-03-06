@@ -176,21 +176,80 @@ Evaluating oxidizedRAG's current capabilities for code-specific agent workflows.
 
 ---
 
-## Recommendations
+## Testing Recommendations
 
-(To be populated based on findings)
+### Phase 1 Follow-up Testing
 
----
+**1. Code Corpus Benchmarking**
+```
+Test: Index real Rust monorepo
+- Corpus size: 50K+ LOC
+- Measure: Indexing time, memory growth
+- Target: < 5min for 50K LOC
+```
 
-## Next Steps
+**2. Load Testing**
+```
+Test: 100 concurrent retrieve_context() calls
+- Measure latency distribution (p50, p95, p99)
+- Memory/CPU saturation
+- Target: p99 < 500ms, memory < 500MB
+```
 
-1. Explore oxidizedRAG source code structure
-2. Review existing code-aware features
-3. Identify gaps vs code agent needs
-4. Document findings in detail
-5. Create integration recommendations
+**3. Code-Specific Experiments**
+```
+Test: Extend oxidizedRAG with code entities
+- Entity types: function, class, module, import
+- Compare embedding strategies: semantic vs syntactic
+- Precision test: "find all callers" pattern
+- Target: > 90% precision
+```
+
+## Code-Specific Prototype Plan
+
+### Experiment: AST-Aware Chunking
+1. Fork oxidizedRAG temporarily
+2. Add tree-sitter integration (already in Cargo.toml as optional feature)
+3. Test code chunking strategies:
+   - Function-level chunks
+   - Class-level chunks
+   - Import-aware chunking
+4. Measure impact on retrieval quality
+5. Document findings for Phase 2
+
+### Success Metrics for Experiments
+- Indexing latency remains < 100ms overhead
+- Retrieval precision improves > 15% over baseline
+- Code-specific queries answerable (e.g., "find all uses of X")
+- Memory footprint stays under 500MB for 50K LOC
+
+## Risk Mitigation
+
+| Gap | Severity | Mitigation | Timeline |
+|-----|----------|-----------|----------|
+| AST-aware chunking | HIGH | tree-sitter integration in Phase 2 #27 | 1-2 weeks |
+| Function-level queries | HIGH | Custom entity extractor | 1 week |
+| Cross-file deps | HIGH | Import parser + graph linking | 1-2 weeks |
+| Change impact | MEDIUM | Diff analyzer module | 1 week |
+| Test-to-code links | MEDIUM | Test metadata indexer | 2 weeks |
+
+## Phase 2 Handoff
+
+### Immediate Actions
+1. [ ] Create test fixtures from code corpus assessment
+2. [ ] Define CodeRetriever trait (Issue #26)
+3. [ ] Document embedding strategy decision (semantic vs syntactic)
+4. [ ] Plan AST-aware implementation
+5. [ ] Schedule code-specific experiments
+
+### Phase 2 Owner Responsibilities
+- Implement code-aware retrieval layer (Issue #27)
+- Design safe action execution (Issue #28)
+- Ensure < 500ms latency with code corpus
+- Achieve > 90% precision on code queries
 
 ---
 
 **Created**: 2026-03-06
-**Target Completion**: 2026-03-07
+**Status**: ✅ COMPLETE - Ready for Phase 2
+**Next Phase**: Code-Specific Retrieval Gap Analysis (Issue #27)
