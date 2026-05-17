@@ -31,23 +31,79 @@ impl AgentContext {
     }
 
     pub fn transition(&mut self, new_state: AgentState) -> Result<()> {
-        // Basic state machine validation
         match (&self.state, &new_state) {
             (AgentState::Init, AgentState::Plan) => {}
             (AgentState::Plan, AgentState::Execute) => {}
             (AgentState::Execute, AgentState::Validate) => {}
             (AgentState::Validate, AgentState::Completed) => {}
-            (AgentState::Validate, AgentState::Plan) => {} // Retry planning on validation failure
-            (_, AgentState::Failed(_)) => {}
+            (AgentState::Validate, AgentState::Plan) => {} // Retry planning
+            (_, AgentState::Failed(_)) => {} // Any state can fail
             (current, next) => {
-                return Err(OgreCoreError::LifecycleError(format!(
-                    "Invalid state transition from {:?} to {:?}",
-                    current, next
-                )));
+                return Err(OgreCoreError::InvalidStateTransition {
+                    from: current.clone(),
+                    to: next.clone(),
+                });
             }
         }
         
         self.state = new_state;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_transitions() {
+        let mut ctx = AgentContext::new("/path", "Test task");
+        assert_eq!(ctx.state, AgentState::Init);
+
+        assert!(ctx.transition(AgentState::Plan).is_ok());
+        assert_eq!(ctx.state, AgentState::Plan);
+
+        assert!(ctx.transition(AgentState::Execute).is_ok());
+        assert_eq!(ctx.state, AgentState::Execute);
+
+        assert!(ctx.transition(AgentState::Validate).is_ok());
+        assert_eq!(ctx.state, AgentState::Validate);
+
+        assert!(ctx.transition(AgentState::Completed).is_ok());
+        assert_eq!(ctx.state, AgentState::Completed);
+    }
+
+    #[test]
+    fn test_retry_planning() {
+        let mut ctx = AgentContext::new("/path", "Test task");
+        ctx.transition(AgentState::Plan).unwrap();
+        ctx.transition(AgentState::Execute).unwrap();
+        ctx.transition(AgentState::Validate).unwrap();
+        
+        // Validation failed, need to replan
+        assert!(ctx.transition(AgentState::Plan).is_ok());
+        assert_eq!(ctx.state, AgentState::Plan);
+    }
+
+    #[test]
+    fn test_invalid_transitions() {
+        let mut ctx = AgentContext::new("/path", "Test task");
+        
+        // Cannot go from Init to Execute directly
+        let err = ctx.transition(AgentState::Execute).unwrap_err();
+        match err {
+            OgreCoreError::InvalidStateTransition { from, to } => {
+                assert_eq!(from, AgentState::Init);
+                assert_eq!(to, AgentState::Execute);
+            }
+            _ => panic!("Expected InvalidStateTransition error"),
+        }
+    }
+
+    #[test]
+    fn test_failure_transition() {
+        let mut ctx = AgentContext::new("/path", "Test task");
+        assert!(ctx.transition(AgentState::Failed("Some error".into())).is_ok());
+        assert_eq!(ctx.state, AgentState::Failed("Some error".into()));
     }
 }

@@ -1,14 +1,13 @@
 use crate::agent_lifecycle::AgentContext;
-use crate::error::Result;
-use async_trait::async_trait;
+use crate::error::{OgreCoreError, Result};
+use std::future::Future;
 
-#[async_trait]
 pub trait CheckpointStore {
     /// Save the current agent state to persistent storage.
-    async fn save_checkpoint(&self, agent_ctx: &AgentContext) -> Result<()>;
+    fn save_checkpoint(&self, agent_ctx: &AgentContext) -> impl Future<Output = Result<()>> + Send;
     
     /// Load an agent state from persistent storage.
-    async fn load_checkpoint(&self, agent_id: &uuid::Uuid) -> Result<AgentContext>;
+    fn load_checkpoint(&self, agent_id: &uuid::Uuid) -> impl Future<Output = Result<AgentContext>> + Send;
 }
 
 /// Example in-memory checkpoint store
@@ -22,17 +21,16 @@ impl MemoryCheckpointStore {
     }
 }
 
-#[async_trait]
 impl CheckpointStore for MemoryCheckpointStore {
     async fn save_checkpoint(&self, _agent_ctx: &AgentContext) -> Result<()> {
         // TODO: implement save
         Ok(())
     }
 
-    async fn load_checkpoint(&self, _agent_id: &uuid::Uuid) -> Result<AgentContext> {
+    async fn load_checkpoint(&self, agent_id: &uuid::Uuid) -> Result<AgentContext> {
         // TODO: implement load
-        Err(crate::error::OgreCoreError::CheckpointError(
-            "load_checkpoint not implemented".to_string()
-        ))
+        Err(OgreCoreError::CheckpointLoadError {
+            agent_id: *agent_id,
+        })
     }
 }

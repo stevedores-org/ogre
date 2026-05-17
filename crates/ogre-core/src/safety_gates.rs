@@ -1,5 +1,6 @@
-use crate::error::{OgreCoreError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
+use std::future::Future;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ApprovalStatus {
@@ -17,7 +18,7 @@ pub struct Plan {
 
 pub trait SafetyGate {
     /// Validates if a plan meets automatic execution criteria or requires human approval.
-    fn evaluate_plan(&self, plan: &Plan) -> Result<ApprovalStatus>;
+    fn evaluate_plan(&self, plan: &Plan) -> impl Future<Output = Result<ApprovalStatus>> + Send;
 }
 
 pub struct DefaultSafetyGate {
@@ -25,7 +26,7 @@ pub struct DefaultSafetyGate {
 }
 
 impl SafetyGate for DefaultSafetyGate {
-    fn evaluate_plan(&self, plan: &Plan) -> Result<ApprovalStatus> {
+    async fn evaluate_plan(&self, plan: &Plan) -> Result<ApprovalStatus> {
         if plan.risk_level == "high" {
             return Ok(ApprovalStatus::Pending);
         }
@@ -35,5 +36,42 @@ impl SafetyGate for DefaultSafetyGate {
         } else {
             Ok(ApprovalStatus::Pending)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_default_safety_gate_approval() {
+        let gate = DefaultSafetyGate { max_auto_complexity: 5 };
+        
+        // Low complexity, low risk -> Approved
+        let plan_approved = Plan {
+            steps: vec!["Format code".into()],
+            complexity: 2,
+            risk_level: "low".into(),
+        };
+        let status = gate.evaluate_plan(&plan_approved).await.unwrap();
+        assert!(matches!(status, ApprovalStatus::Approved));
+
+        // High complexity, low risk -> Pending
+        let plan_pending_complexity = Plan {
+            steps: vec!["Major refactor".into()],
+            complexity: 8,
+            risk_level: "low".into(),
+        };
+        let status = gate.evaluate_plan(&plan_pending_complexity).await.unwrap();
+        assert!(matches!(status, ApprovalStatus::Pending));
+
+        // Low complexity, high risk -> Pending
+        let plan_pending_risk = Plan {
+            steps: vec!["Update credentials".into()],
+            complexity: 2,
+            risk_level: "high".into(),
+        };
+        let status = gate.evaluate_plan(&plan_pending_risk).await.unwrap();
+        assert!(matches!(status, ApprovalStatus::Pending));
     }
 }
