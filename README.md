@@ -16,6 +16,12 @@ Enable autonomous code agents to be **productive, safe, and explainable** by arc
 
 Within the broader lornu.ai ecosystem for infrastructure automation.
 
+## 📦 Packaging & deploy
+
+- **No Dockerfiles** — OCI images from **Nix** flakes, published with **[dockworker.ai](https://dockworker.ai)** + skopeo (see [docs/PACKAGING.md](./docs/PACKAGING.md)).
+- **OGRE stack** — mash-up of component containers (oxidizedRAG + oxidizedgraph + data-fabric), not one fat image ([docs/DEPLOY_STACK.md](./docs/DEPLOY_STACK.md)).
+- **Kubernetes** — Kustomize overlays per component; OGRE will compose them when `deploy/` lands here.
+
 ## 📋 What's Here
 
 - **[PLAN.md](./PLAN.md)** - Integration wiring plan with 5 phases:
