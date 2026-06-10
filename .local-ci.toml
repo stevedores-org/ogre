@@ -1,11 +1,26 @@
 # OGRE CI Configuration for local-ci
-# Validates documentation before commits/pushes
 
 [cache]
 skip_dirs = [".git", ".github", ".claude", "target"]
-include_patterns = ["*.md", "*.toml", "*.json"]
+include_patterns = ["*.md", "*.toml", "*.json", "*.rs"]
 
 [stages.check-docs]
 command = ["bash", "-c", "ls README.md PLAN.md >/dev/null 2>&1 && echo 'Documentation complete'"]
 enabled = true
 timeout = 30
+
+[stages.fmt]
+command = ["cargo", "fmt", "--all", "--", "--check"]
+fix_command = ["cargo", "fmt", "--all"]
+timeout = 120
+enabled = true
+
+[stages.clippy]
+command = ["cargo", "clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
+timeout = 600
+enabled = true
+
+[stages.test]
+command = ["cargo", "test", "--workspace"]
+timeout = 1200
+enabled = true
