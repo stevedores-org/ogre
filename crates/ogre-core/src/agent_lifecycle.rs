@@ -37,7 +37,7 @@ impl AgentContext {
             (AgentState::Execute, AgentState::Validate) => {}
             (AgentState::Validate, AgentState::Completed) => {}
             (AgentState::Validate, AgentState::Plan) => {} // Retry planning
-            (_, AgentState::Failed(_)) => {} // Any state can fail
+            (_, AgentState::Failed(_)) => {}               // Any state can fail
             (current, next) => {
                 return Err(OgreCoreError::InvalidStateTransition {
                     from: current.clone(),
@@ -45,7 +45,7 @@ impl AgentContext {
                 });
             }
         }
-        
+
         self.state = new_state;
         Ok(())
     }
@@ -79,7 +79,7 @@ mod tests {
         ctx.transition(AgentState::Plan).unwrap();
         ctx.transition(AgentState::Execute).unwrap();
         ctx.transition(AgentState::Validate).unwrap();
-        
+
         // Validation failed, need to replan
         assert!(ctx.transition(AgentState::Plan).is_ok());
         assert_eq!(ctx.state, AgentState::Plan);
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn test_invalid_transitions() {
         let mut ctx = AgentContext::new("/path", "Test task");
-        
+
         // Cannot go from Init to Execute directly
         let err = ctx.transition(AgentState::Execute).unwrap_err();
         match err {
@@ -103,7 +103,9 @@ mod tests {
     #[test]
     fn test_failure_transition() {
         let mut ctx = AgentContext::new("/path", "Test task");
-        assert!(ctx.transition(AgentState::Failed("Some error".into())).is_ok());
+        assert!(ctx
+            .transition(AgentState::Failed("Some error".into()))
+            .is_ok());
         assert_eq!(ctx.state, AgentState::Failed("Some error".into()));
     }
 }

@@ -30,7 +30,7 @@ impl SafetyGate for DefaultSafetyGate {
         if plan.risk_level == "high" {
             return Ok(ApprovalStatus::Pending);
         }
-        
+
         if plan.complexity <= self.max_auto_complexity {
             Ok(ApprovalStatus::Approved)
         } else {
@@ -45,8 +45,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_default_safety_gate_approval() {
-        let gate = DefaultSafetyGate { max_auto_complexity: 5 };
-        
+        let gate = DefaultSafetyGate {
+            max_auto_complexity: 5,
+        };
+
         // Low complexity, low risk -> Approved
         let plan_approved = Plan {
             steps: vec!["Format code".into()],

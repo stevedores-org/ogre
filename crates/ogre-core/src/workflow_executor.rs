@@ -21,7 +21,7 @@ pub trait AgentOrchestrator {
         agent_ctx: &mut AgentContext,
         workflow: Workflow,
     ) -> impl Future<Output = Result<WorkflowResult>> + Send;
-    
+
     /// Retrieves the current state of an agent.
     fn get_agent_state(
         &self,
@@ -35,6 +35,12 @@ pub struct DefaultWorkflowExecutor;
 impl DefaultWorkflowExecutor {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for DefaultWorkflowExecutor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
