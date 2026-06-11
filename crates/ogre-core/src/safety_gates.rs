@@ -1,6 +1,7 @@
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::future::Future;
+use ogre_planning::Plan;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ApprovalStatus {
@@ -9,12 +10,6 @@ pub enum ApprovalStatus {
     Rejected(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Plan {
-    pub steps: Vec<String>,
-    pub complexity: u32,
-    pub risk_level: String,
-}
 
 pub trait SafetyGate {
     /// Validates if a plan meets automatic execution criteria or requires human approval.
