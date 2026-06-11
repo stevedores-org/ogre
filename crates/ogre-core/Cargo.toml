@@ -5,8 +5,17 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
-tokio.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-thiserror.workspace = true
-uuid.workspace = true
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+oxidizedgraph = { workspace = true }
+chrono = { workspace = true }
+ogre-retrieval = { workspace = true }
+ogre-execution = { workspace = true }
+ogre-planning = { workspace = true }
+ogre-observability = { workspace = true }
+ogre-fabric = { workspace = true }
+async-trait = { workspace = true }
+
