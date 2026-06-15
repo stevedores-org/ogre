@@ -187,7 +187,7 @@ Evaluating oxidizedRAG's current capabilities for code-specific agent workflows.
 
 ---
 
-## Recommendations
+## Testing Recommendations
 
 ### ✅ INTEGRATE oxidizedRAG as Core Retrieval Backend
 
@@ -233,7 +233,13 @@ Agent Workflows (Issue #28 - Safe Execution)
 
 **No Alternative Recommended**: oxidizedRAG is best-fit for OGRE retrieval role.
 
----
+**1. Code Corpus Benchmarking**
+```
+Test: Index real Rust monorepo
+- Corpus size: 50K+ LOC
+- Measure: Indexing time, memory growth
+- Target: < 5min for 50K LOC
+```
 
 ## Phase 2 Work Items
 
