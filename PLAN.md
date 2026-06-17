@@ -132,8 +132,9 @@ struct AgentRun {
 - Zero-Trust OIDC for all operations
 
 **Deployment**:
-- Nix flakes for reproducible builds (lornu.ai pattern)
-- Attic/R2 caching for binaries
+- **No Dockerfiles** — OCI images from Nix (`dockerTools.buildLayeredImage`) + **[dockworker.ai](https://dockworker.ai)** (`dockworker.toml` → skopeo push to `ghcr.io`)
+- Per-component `deploy/` (Kustomize + GKE Autopilot overlays); OGRE composes the stack ([docs/DEPLOY_STACK.md](./docs/DEPLOY_STACK.md), [docs/PACKAGING.md](./docs/PACKAGING.md))
+- Stevedores Nix cache (opt-in) for CI/local; Attic/R2 where applicable
 - Multi-environment promotion: dev → staging → prod
 - Flux/ArgoCD for GitOps deployment
 
@@ -426,6 +427,8 @@ Agent Decision Loop:
 
 ### 5.3 Deployment
 
+- [ ] Component images on GHCR (each repo: `flake.nix` + `dockworker.toml`, no Dockerfile)
+- [ ] OGRE `deploy/` mash-up Kustomize (pin component images + service URL ConfigMap)
 - [ ] Multi-environment rollout (dev → staging → prod)
 - [ ] Integration with lornu.ai agent swarm
 - [ ] Zero-Trust OIDC authentication
@@ -442,7 +445,7 @@ Agent Decision Loop:
 | **AST Parser** | tree-sitter vs syn | tree-sitter: multi-lang; syn: Rust-only |
 | **Codebase Indexing** | Pre-compute vs on-demand | Pre-compute: fast; on-demand: memory-efficient |
 | **Workflow Serialization** | TOML vs JSON | TOML: human-friendly; JSON: minimal |
-| **Isolation** | Containers vs seccomp | Containers: strong; seccomp: lightweight |
+| **Isolation** | Containers vs seccomp | OCI/Nix images (dockworker); seccomp optional in K8s |
 | **Knowledge Store** | SurrealDB vs PostgreSQL | SurrealDB: graph-native; PostgreSQL: proven |
 
 ---
