@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -70,7 +70,10 @@ impl SafeActionRunner {
         }
 
         // Canonicalize workspace root to compare
-        let canonical_root = self.workspace_root.canonicalize().map_err(OgreExecutionError::Io)?;
+        let canonical_root = self
+            .workspace_root
+            .canonicalize()
+            .map_err(OgreExecutionError::Io)?;
 
         // Ensure normalized starts with canonical_root
         if !normalized.starts_with(&canonical_root) {
@@ -81,7 +84,6 @@ impl SafeActionRunner {
 
         Ok(normalized)
     }
-
 
     pub fn write_file(&self, path: &str, content: &str) -> Result<()> {
         let validated = self.validate_path(Path::new(path))?;
@@ -97,7 +99,7 @@ impl SafeActionRunner {
 
     pub fn run_tool(&self, cmd: &str, args: &[&str]) -> Result<CommandResult> {
         // Run with a timeout, capture output
-        let mut child = Command::new(cmd)
+        let child = Command::new(cmd)
             .args(args)
             .current_dir(&self.workspace_root)
             .stdout(std::process::Stdio::piped())
@@ -139,7 +141,7 @@ impl SafeActionRunner {
                 reason: format!("Git commit failed: {}", res.stderr),
             });
         }
-        
+
         // Get last commit hash
         let hash_res = self.run_tool("git", &["rev-parse", "HEAD"])?;
         Ok(hash_res.stdout.trim().to_string())

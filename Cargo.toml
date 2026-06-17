@@ -16,8 +16,8 @@ serde_json = "1.0"
 thiserror = "1.0"
 async-trait = "0.1"
 uuid = { version = "1.0", features = ["v4", "serde"] }
-oxidizedgraph = { path = "/Users/aivcs/engineering/code/oxidizedgraph" }
-graphrag-core = { path = "/Users/aivcs/engineering/code/oxidizedRAG/graphrag-core" }
+oxidizedgraph = { git = "https://github.com/stevedores-org/oxidizedgraph", branch = "develop" }
+graphrag-core = { git = "https://github.com/stevedores-org/oxidizedRAG", branch = "develop" }
 chrono = { version = "0.4", features = ["serde"] }
 ogre-core = { path = "crates/ogre-core" }
 ogre-retrieval = { path = "crates/ogre-retrieval" }

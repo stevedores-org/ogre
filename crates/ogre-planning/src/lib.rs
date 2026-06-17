@@ -29,8 +29,8 @@ impl TaskDecomposer {
 
     pub fn decompose_task(&self, task_description: &str) -> Result<Plan> {
         let mut steps = Vec::new();
-        let mut complexity = 1;
-        let mut risk_level = "low".to_string();
+        let complexity;
+        let risk_level;
 
         if task_description.contains("refactor") || task_description.contains("rewrite") {
             steps.push("Scan codebase for usages".to_string());

@@ -67,7 +67,8 @@ pub trait CodeRetriever: Send + Sync {
     async fn query_code(&self, query: &str, top_k: usize) -> Result<Vec<CodeContext>>;
     async fn get_code_by_location(&self, path: &str, identifier: &str) -> Result<CodeContext>;
     async fn find_callers(&self, path: &str, fn_name: &str) -> Result<Vec<CodeLocation>>;
-    async fn analyze_change_impact(&self, path: &str, old: &str, new: &str) -> Result<ChangeImpact>;
+    async fn analyze_change_impact(&self, path: &str, old: &str, new: &str)
+        -> Result<ChangeImpact>;
 }
 
 /// A default / mock retriever that parses files locally or falls back to basic search.
@@ -85,7 +86,7 @@ impl DefaultCodeRetriever {
 
 #[async_trait]
 impl CodeRetriever for DefaultCodeRetriever {
-    async fn query_code(&self, query: &str, _top_k: usize) -> Result<Vec<CodeContext>> {
+    async fn query_code(&self, _query: &str, _top_k: usize) -> Result<Vec<CodeContext>> {
         // Return dummy/mock results for demonstration & tests
         Ok(vec![CodeContext {
             path: format!("{}/src/main.rs", self.root_dir),
@@ -108,7 +109,7 @@ impl CodeRetriever for DefaultCodeRetriever {
         })
     }
 
-    async fn find_callers(&self, path: &str, fn_name: &str) -> Result<Vec<CodeLocation>> {
+    async fn find_callers(&self, path: &str, _fn_name: &str) -> Result<Vec<CodeLocation>> {
         Ok(vec![CodeLocation {
             path: path.to_string(),
             start_line: 10,
@@ -116,7 +117,12 @@ impl CodeRetriever for DefaultCodeRetriever {
         }])
     }
 
-    async fn analyze_change_impact(&self, path: &str, _old: &str, _new: &str) -> Result<ChangeImpact> {
+    async fn analyze_change_impact(
+        &self,
+        path: &str,
+        _old: &str,
+        _new: &str,
+    ) -> Result<ChangeImpact> {
         Ok(ChangeImpact {
             file_path: path.to_string(),
             affected_dependents: vec!["src/main.rs".to_string()],
