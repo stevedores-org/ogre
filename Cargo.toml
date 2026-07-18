@@ -1,0 +1,28 @@
+[workspace]
+members = [
+    "crates/*"
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["lornu-ai"]
+
+[workspace.dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+async-trait = "0.1"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+oxidizedgraph = { path = "/Users/aivcs/engineering/code/oxidizedgraph" }
+graphrag-core = { path = "/Users/aivcs/engineering/code/oxidizedRAG/graphrag-core" }
+chrono = { version = "0.4", features = ["serde"] }
+ogre-core = { path = "crates/ogre-core" }
+ogre-retrieval = { path = "crates/ogre-retrieval" }
+ogre-execution = { path = "crates/ogre-execution" }
+ogre-planning = { path = "crates/ogre-planning" }
+ogre-observability = { path = "crates/ogre-observability" }
+ogre-fabric = { path = "crates/ogre-fabric" }
+

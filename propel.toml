@@ -1,0 +1,25 @@
+[repo]
+owner = "lornu-ai"
+name = "ogre"
+description = "Agent integration wiring and safety layer (lornu-ai commercial fork)"
+
+[[checks]]
+name = "type-safety"
+description = "cargo fmt --check, clippy -D warnings"
+command = "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings"
+timeout_seconds = 900
+required = true
+
+[[checks]]
+name = "unit-tests"
+description = "cargo test workspace"
+command = "cargo test --workspace"
+timeout_seconds = 1200
+required = true
+
+[[checks]]
+name = "secrets"
+description = "gitleaks detect"
+command = "gitleaks detect --no-banner --redact --source ."
+timeout_seconds = 120
+required = true
