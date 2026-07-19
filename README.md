@@ -11,8 +11,8 @@ OGRE connects knowledge retrieval (oxidizedRAG), workflow orchestration (oxidize
 Enable autonomous code agents to be **productive, safe, and explainable** by architecting the integration between:
 - **oxidizedRAG**: Knowledge graph retrieval at scale
 - **oxidizedgraph**: Agent workflow orchestration
-- **data-fabric**: Persistent knowledge & audit trails
-- **lornu.ai**: Multi-cloud autonomous infrastructure
+- **data-mesh**: Persistent knowledge & audit trails
+- **iavcs.io**: AI Version Control Systems
 
 Within the broader lornu.ai ecosystem for infrastructure automation.
 
