@@ -28,30 +28,39 @@ impl TaskDecomposer {
     }
 
     pub fn decompose_task(&self, task_description: &str) -> Result<Plan> {
-        let mut steps = Vec::new();
-        let mut complexity = 1;
-        let mut risk_level = "low".to_string();
-
-        if task_description.contains("refactor") || task_description.contains("rewrite") {
-            steps.push("Scan codebase for usages".to_string());
-            steps.push("Extract functions to common helper module".to_string());
-            steps.push("Update all caller files".to_string());
-            steps.push("Run cargo test to verify refactoring".to_string());
-            complexity = 7;
-            risk_level = "medium".to_string();
-        } else if task_description.contains("credential") || task_description.contains("secret") {
-            steps.push("Identify secret exposure".to_string());
-            steps.push("Remove secret from source code".to_string());
-            steps.push("Add environment variable config".to_string());
-            complexity = 3;
-            risk_level = "high".to_string();
-        } else {
-            steps.push("Analyze request requirements".to_string());
-            steps.push("Apply simple file modifications".to_string());
-            steps.push("Validate code via cargo check".to_string());
-            complexity = 2;
-            risk_level = "low".to_string();
-        }
+        let (steps, complexity, risk_level) =
+            if task_description.contains("refactor") || task_description.contains("rewrite") {
+                (
+                    vec![
+                        "Scan codebase for usages".to_string(),
+                        "Extract functions to common helper module".to_string(),
+                        "Update all caller files".to_string(),
+                        "Run cargo test to verify refactoring".to_string(),
+                    ],
+                    7,
+                    "medium".to_string(),
+                )
+            } else if task_description.contains("credential") || task_description.contains("secret") {
+                (
+                    vec![
+                        "Identify secret exposure".to_string(),
+                        "Remove secret from source code".to_string(),
+                        "Add environment variable config".to_string(),
+                    ],
+                    3,
+                    "high".to_string(),
+                )
+            } else {
+                (
+                    vec![
+                        "Analyze request requirements".to_string(),
+                        "Apply simple file modifications".to_string(),
+                        "Validate code via cargo check".to_string(),
+                    ],
+                    2,
+                    "low".to_string(),
+                )
+            };
 
         Ok(Plan {
             steps,

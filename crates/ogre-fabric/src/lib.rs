@@ -88,7 +88,7 @@ impl AgentPersistence for MemoryAgentPersistence {
 
     async fn get_run_history(&self, limit: usize) -> Result<Vec<AgentRun>> {
         let runs = self.runs.lock().unwrap();
-        let list: Vec<AgentRun> = runs.values().cloned().take(limit).collect();
+        let list: Vec<AgentRun> = runs.values().take(limit).cloned().collect();
         Ok(list)
     }
 
@@ -96,7 +96,7 @@ impl AgentPersistence for MemoryAgentPersistence {
         let modifications = self.modifications.lock().unwrap();
         let filtered = modifications
             .iter()
-            .filter(|m| path.map_or(true, |p| m.file_path.contains(p)))
+            .filter(|m| path.is_none_or(|p| m.file_path.contains(p)))
             .cloned()
             .collect();
         Ok(filtered)

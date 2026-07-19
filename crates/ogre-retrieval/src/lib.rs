@@ -85,7 +85,7 @@ impl DefaultCodeRetriever {
 
 #[async_trait]
 impl CodeRetriever for DefaultCodeRetriever {
-    async fn query_code(&self, query: &str, _top_k: usize) -> Result<Vec<CodeContext>> {
+    async fn query_code(&self, _query: &str, _top_k: usize) -> Result<Vec<CodeContext>> {
         // Return dummy/mock results for demonstration & tests
         Ok(vec![CodeContext {
             path: format!("{}/src/main.rs", self.root_dir),

@@ -97,7 +97,7 @@ impl SafeActionRunner {
 
     pub fn run_tool(&self, cmd: &str, args: &[&str]) -> Result<CommandResult> {
         // Run with a timeout, capture output
-        let mut child = Command::new(cmd)
+        let child = Command::new(cmd)
             .args(args)
             .current_dir(&self.workspace_root)
             .stdout(std::process::Stdio::piped())
