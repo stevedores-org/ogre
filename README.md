@@ -88,7 +88,3 @@ This is an active integration project. Contributions welcome in:
 - Testing & validation
 
 <!-- Last edited by OGRE Agent at 2026-06-11 01:58:44.241830 UTC -->
-
-<!-- Last edited by OGRE Agent at 2026-07-19 01:10:35.898943 UTC -->
-
-<!-- Last edited by OGRE Agent at 2026-07-19 01:10:35.900086 UTC -->
