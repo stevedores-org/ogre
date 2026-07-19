@@ -16,8 +16,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 async-trait = "0.1"
 uuid = { version = "1.0", features = ["v4", "serde"] }
-oxidizedgraph = { path = "/Users/aivcs/engineering/code/oxidizedgraph" }
-graphrag-core = { path = "/Users/aivcs/engineering/code/oxidizedRAG/graphrag-core" }
+oxidizedgraph = { git = "https://github.com/lornu-ai/oxidizedgraph.git", branch = "main" }
 chrono = { version = "0.4", features = ["serde"] }
 ogre-core = { path = "crates/ogre-core" }
 ogre-retrieval = { path = "crates/ogre-retrieval" }
@@ -25,4 +24,6 @@ ogre-execution = { path = "crates/ogre-execution" }
 ogre-planning = { path = "crates/ogre-planning" }
 ogre-observability = { path = "crates/ogre-observability" }
 ogre-fabric = { path = "crates/ogre-fabric" }
-
+axum = "0.7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
