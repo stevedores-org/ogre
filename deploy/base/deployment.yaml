@@ -21,7 +21,7 @@ spec:
       containers:
         - name: ogre-svc
           image: us-central1-docker.pkg.dev/gcp-lornu-ai/lornu/ogre-svc:main
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080

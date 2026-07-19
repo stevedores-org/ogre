@@ -43,7 +43,13 @@
           config = {
             Cmd = [ "${ogre-svc}/bin/ogre-svc" ];
             ExposedPorts = { "8080/tcp" = {}; };
-            Env = [ "PORT=8080" "RUST_LOG=info" "OGRE_LISTEN_ADDR=0.0.0.0:8080" ];
+            User = "1000:1000";
+            Env = [
+              "PORT=8080"
+              "RUST_LOG=info"
+              "OGRE_LISTEN_ADDR=0.0.0.0:8080"
+              "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            ];
           };
         };
       in

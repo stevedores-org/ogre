@@ -1,18 +1,18 @@
 use crate::agent_lifecycle::{AgentContext, AgentState as LifecycleState};
 use crate::error::{OgreCoreError, Result};
+use async_trait::async_trait;
 use std::future::Future;
 use std::sync::Arc;
-use async_trait::async_trait;
 
 use oxidizedgraph::graph::{GraphBuilder, NodeExecutor, NodeOutput};
 use oxidizedgraph::runner::GraphRunner;
 use oxidizedgraph::state::{AgentState, SharedState};
 
-use ogre_retrieval::CodeRetriever;
 use ogre_execution::SafeActionRunner;
-use ogre_planning::TaskDecomposer;
-use ogre_observability::AgentOtelTracer;
 use ogre_fabric::{AgentPersistence, AgentRun, CodeModification, RunStatus};
+use ogre_observability::AgentOtelTracer;
+use ogre_planning::TaskDecomposer;
+use ogre_retrieval::CodeRetriever;
 
 #[derive(Debug, Clone)]
 pub struct Workflow {
@@ -54,11 +54,21 @@ impl NodeExecutor for LoadIntentNode {
         "load_intent"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("load_intent", "Load intent from file", "Initializing agent workflow with objective constraints", 10);
-        
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "load_intent",
+            "Load intent from file",
+            "Initializing agent workflow with objective constraints",
+            10,
+        );
+
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+
         // Simulating loading intent.get yaml/json
         let intent_info = serde_json::json!({
             "objective_id": "OBJ-2026-SDF-001",
@@ -70,7 +80,7 @@ impl NodeExecutor for LoadIntentNode {
                 "no secrets in repo"
             ]
         });
-        
+
         guard.context.insert("intent".to_string(), intent_info);
         Ok(NodeOutput::cont())
     }
@@ -88,23 +98,43 @@ impl NodeExecutor for RetrieveContextNode {
         "retrieve_context"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("retrieve_context", "Query oxidizedRAG GraphRAG", "Searching codebase for workflow context", 25);
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "retrieve_context",
+            "Query oxidizedRAG GraphRAG",
+            "Searching codebase for workflow context",
+            25,
+        );
+
         let query = {
-            let guard = state.read().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-            guard.context.get("intent")
+            let guard = state
+                .read()
+                .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+            guard
+                .context
+                .get("intent")
                 .and_then(|v| v.get("task"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("Retrieve codebase layout")
                 .to_string()
         };
 
-        let contexts = self.retriever.query_code(&query, 5).await
+        let contexts = self
+            .retriever
+            .query_code(&query, 5)
+            .await
             .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
 
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("retrieved_context".to_string(), serde_json::to_value(contexts).unwrap());
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard.context.insert(
+            "retrieved_context".to_string(),
+            serde_json::to_value(contexts).unwrap(),
+        );
         Ok(NodeOutput::cont())
     }
 }
@@ -120,10 +150,20 @@ impl NodeExecutor for ComposeTeamNode {
         "compose_team"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("compose_team", "Assemble agent team via bond", "Assigning builder and reviewer roles", 5);
-        
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "compose_team",
+            "Assemble agent team via bond",
+            "Assigning builder and reviewer roles",
+            5,
+        );
+
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
         let team = serde_json::json!({
             "roles": ["builder", "reviewer"],
             "assigned_agents": {
@@ -148,23 +188,41 @@ impl NodeExecutor for PlanChangesNode {
         "plan_changes"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("plan_changes", "Generate multi-step modification plan", "Decomposing task objective into steps with risk scoring", 40);
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "plan_changes",
+            "Generate multi-step modification plan",
+            "Decomposing task objective into steps with risk scoring",
+            40,
+        );
+
         let task_desc = {
-            let guard = state.read().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-            guard.context.get("intent")
+            let guard = state
+                .read()
+                .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+            guard
+                .context
+                .get("intent")
                 .and_then(|v| v.get("task"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("Apply code improvements")
                 .to_string()
         };
 
-        let plan = self.decomposer.decompose_task(&task_desc)
+        let plan = self
+            .decomposer
+            .decompose_task(&task_desc)
             .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
 
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("plan".to_string(), serde_json::to_value(plan).unwrap());
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard
+            .context
+            .insert("plan".to_string(), serde_json::to_value(plan).unwrap());
         Ok(NodeOutput::cont())
     }
 }
@@ -181,12 +239,24 @@ impl NodeExecutor for ApplyEditsNode {
         "apply_edits"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("apply_edits", "Write changes to source files", "Creating target feature branch and injecting changes", 50);
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "apply_edits",
+            "Write changes to source files",
+            "Creating target feature branch and injecting changes",
+            50,
+        );
+
         let branch = {
-            let guard = state.read().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-            guard.context.get("intent")
+            let guard = state
+                .read()
+                .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+            guard
+                .context
+                .get("intent")
                 .and_then(|v| v.get("branch"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("feat/autonomous-change")
@@ -202,16 +272,29 @@ impl NodeExecutor for ApplyEditsNode {
             Err(_) => "# Ogre Workspace".to_string(),
         };
 
-        let updated_readme = format!("{}\n\n<!-- Last edited by OGRE Agent at {} -->\n", readme_content.trim(), chrono::Utc::now());
-        self.action_runner.write_file("README.md", &updated_readme)
+        let updated_readme = format!(
+            "{}\n\n<!-- Last edited by OGRE Agent at {} -->\n",
+            readme_content.trim(),
+            chrono::Utc::now()
+        );
+        self.action_runner
+            .write_file("README.md", &updated_readme)
             .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
 
-        let diff = self.action_runner.git_diff()
+        let diff = self
+            .action_runner
+            .git_diff()
             .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
 
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("diff".to_string(), serde_json::json!(diff));
-        guard.context.insert("edits_applied".to_string(), serde_json::json!(true));
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard
+            .context
+            .insert("diff".to_string(), serde_json::json!(diff));
+        guard
+            .context
+            .insert("edits_applied".to_string(), serde_json::json!(true));
         Ok(NodeOutput::cont())
     }
 }
@@ -228,21 +311,41 @@ impl NodeExecutor for ValidateNode {
         "validate"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("validate", "Run verification suite", "Checking code formatting and compiler compliance", 30);
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "validate",
+            "Run verification suite",
+            "Checking code formatting and compiler compliance",
+            30,
+        );
+
         // Execute cargo check or local test runner
-        let verify_res = self.action_runner.run_tool("cargo", &["check"])
+        let verify_res = self
+            .action_runner
+            .run_tool("cargo", &["check"])
             .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
 
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("validation_success".to_string(), serde_json::json!(verify_res.success));
-        guard.context.insert("validation_output".to_string(), serde_json::json!(verify_res.stdout));
-        
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard.context.insert(
+            "validation_success".to_string(),
+            serde_json::json!(verify_res.success),
+        );
+        guard.context.insert(
+            "validation_output".to_string(),
+            serde_json::json!(verify_res.stdout),
+        );
+
         if verify_res.success {
             Ok(NodeOutput::cont())
         } else {
-            Err(oxidizedgraph::error::NodeError::execution_failed("Compiler check failed".to_string()))
+            Err(oxidizedgraph::error::NodeError::execution_failed(
+                "Compiler check failed".to_string(),
+            ))
         }
     }
 }
@@ -260,15 +363,29 @@ impl NodeExecutor for SnapshotNode {
         "snapshot"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("snapshot", "Commit snapshot to aivcs", "Creating git commit for isolation and audit log", 15);
-        
-        let commit_hash = self.action_runner.git_commit("feat(workflow): applied changes via autonomous builder")
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "snapshot",
+            "Commit snapshot to aivcs",
+            "Creating git commit for isolation and audit log",
+            15,
+        );
+
+        let commit_hash = self
+            .action_runner
+            .git_commit("feat(workflow): applied changes via autonomous builder")
             .unwrap_or_else(|_| "mock-commit-hash-123456789".to_string());
 
         let diff = {
-            let guard = state.read().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-            guard.context.get("diff")
+            let guard = state
+                .read()
+                .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+            guard
+                .context
+                .get("diff")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string()
@@ -283,8 +400,12 @@ impl NodeExecutor for SnapshotNode {
         };
         let _ = self.persistence.record_modification(&mod_record).await;
 
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("commit_id".to_string(), serde_json::json!(commit_hash));
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard
+            .context
+            .insert("commit_id".to_string(), serde_json::json!(commit_hash));
         Ok(NodeOutput::cont())
     }
 }
@@ -300,12 +421,24 @@ impl NodeExecutor for OpenPRNode {
         "open_pr"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("open_pr", "Open PR via GitHub MCP", "Creating pull request to develop branch", 20);
-        
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "open_pr",
+            "Open PR via GitHub MCP",
+            "Creating pull request to develop branch",
+            20,
+        );
+
         let branch = {
-            let guard = state.read().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-            guard.context.get("intent")
+            let guard = state
+                .read()
+                .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+            guard
+                .context
+                .get("intent")
                 .and_then(|v| v.get("branch"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("feat/autonomous-change")
@@ -313,9 +446,13 @@ impl NodeExecutor for OpenPRNode {
         };
 
         let pr_url = format!("https://github.com/lornu-ai/ogre/pulls/{}", branch);
-        
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("pr_url".to_string(), serde_json::json!(pr_url));
+
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard
+            .context
+            .insert("pr_url".to_string(), serde_json::json!(pr_url));
         Ok(NodeOutput::cont())
     }
 }
@@ -331,15 +468,27 @@ impl NodeExecutor for EmitCodeCommittedNode {
         "emit_code_committed"
     }
 
-    async fn execute(&self, state: SharedState) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
-        self.tracer.record_decision("emit_code_committed", "Emit CODE_COMMITTED event", "Notifying instruction compiler and bullpen dispatch", 10);
-        
-        let mut guard = state.write().map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
-        guard.context.insert("event_emitted".to_string(), serde_json::json!("CODE_COMMITTED"));
+    async fn execute(
+        &self,
+        state: SharedState,
+    ) -> std::result::Result<NodeOutput, oxidizedgraph::error::NodeError> {
+        self.tracer.record_decision(
+            "emit_code_committed",
+            "Emit CODE_COMMITTED event",
+            "Notifying instruction compiler and bullpen dispatch",
+            10,
+        );
+
+        let mut guard = state
+            .write()
+            .map_err(|e| oxidizedgraph::error::NodeError::execution_failed(e.to_string()))?;
+        guard.context.insert(
+            "event_emitted".to_string(),
+            serde_json::json!("CODE_COMMITTED"),
+        );
         Ok(NodeOutput::cont())
     }
 }
-
 
 pub struct DefaultWorkflowExecutor {
     pub code_retriever: Arc<dyn CodeRetriever>,
@@ -434,16 +583,19 @@ impl AgentOrchestrator for DefaultWorkflowExecutor {
 
         // Invoke the compiled graph
         let runner = GraphRunner::with_defaults(graph);
-        let final_agent_state = runner.invoke(AgentState::new()).await
-            .map_err(|e| OgreCoreError::WorkflowExecutionFailed {
+        let final_agent_state = runner.invoke(AgentState::new()).await.map_err(|e| {
+            OgreCoreError::WorkflowExecutionFailed {
                 reason: format!("Workflow execution failed: {:?}", e),
-            })?;
+            }
+        })?;
 
         // Transition state to Validate
         agent_ctx.transition(LifecycleState::Validate)?;
 
         // Check if event was emitted and validate
-        let success = final_agent_state.context.get("event_emitted")
+        let success = final_agent_state
+            .context
+            .get("event_emitted")
             .map(|v| v.as_str() == Some("CODE_COMMITTED"))
             .unwrap_or(false);
 
@@ -451,7 +603,9 @@ impl AgentOrchestrator for DefaultWorkflowExecutor {
         if success {
             agent_ctx.transition(LifecycleState::Completed)?;
         } else {
-            agent_ctx.transition(LifecycleState::Failed("CODE_COMMITTED not emitted".to_string()))?;
+            agent_ctx.transition(LifecycleState::Failed(
+                "CODE_COMMITTED not emitted".to_string(),
+            ))?;
         }
 
         // Persist run metrics
@@ -459,16 +613,29 @@ impl AgentOrchestrator for DefaultWorkflowExecutor {
         let run_record = AgentRun {
             id: agent_ctx.agent_id.to_string(),
             task: agent_ctx.task_description.clone(),
-            decisions: self.tracer.get_traces().iter().map(|t| t.reasoning.clone()).collect(),
+            decisions: self
+                .tracer
+                .get_traces()
+                .iter()
+                .map(|t| t.reasoning.clone())
+                .collect(),
             execution_time_ms: metrics.total_duration_ms,
             token_cost: metrics.total_tokens,
-            status: if success { RunStatus::Success } else { RunStatus::Failed("CODE_COMMITTED not emitted".to_string()) },
+            status: if success {
+                RunStatus::Success
+            } else {
+                RunStatus::Failed("CODE_COMMITTED not emitted".to_string())
+            },
         };
         let _ = self.persistence.record_run(&run_record).await;
 
         Ok(WorkflowResult {
             success,
-            message: if success { "Workflow executed successfully".to_string() } else { "Workflow validation failed".to_string() },
+            message: if success {
+                "Workflow executed successfully".to_string()
+            } else {
+                "Workflow validation failed".to_string()
+            },
             final_state: final_agent_state,
         })
     }
@@ -482,17 +649,17 @@ impl AgentOrchestrator for DefaultWorkflowExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ogre_retrieval::DefaultCodeRetriever;
     use ogre_fabric::MemoryAgentPersistence;
+    use ogre_retrieval::DefaultCodeRetriever;
 
     #[tokio::test]
     async fn test_default_workflow_execution() {
         let current = std::env::current_dir().unwrap();
         let root = current.parent().unwrap().parent().unwrap().to_path_buf();
         let root_str = root.to_str().unwrap().to_string();
-        
+
         let retriever = Arc::new(DefaultCodeRetriever::new(&root_str));
-        
+
         let policy = ogre_execution::ExecutionPolicy {
             allowed_paths: vec![root_str.clone()],
             block_network: true,
@@ -522,12 +689,16 @@ mod tests {
         let readme_before = std::fs::read_to_string(&readme_path).unwrap();
 
         let result = executor.execute_workflow(&mut ctx, workflow).await;
-        
+
         // Restore README.md and checkout the branch back to normal
         let _ = std::fs::write(&readme_path, readme_before);
         let _ = action_runner.run_tool("git", &["checkout", "develop"]);
 
-        assert!(result.is_ok(), "Workflow execution failed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Workflow execution failed: {:?}",
+            result.err()
+        );
         let run_res = result.unwrap();
         assert!(run_res.success);
         assert_eq!(ctx.state, LifecycleState::Completed);

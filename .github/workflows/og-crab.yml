@@ -1,0 +1,19 @@
+# OG Crab assessment — ADVISORY, not a gate.
+name: OG Crab CI Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+permissions:
+  pull-requests: write
+  contents: read
+  id-token: write
+
+jobs:
+  og-crab:
+    uses: lornu-ai/ci-checks/.github/workflows/og-crab-reusable.yml@main
+    with:
+      parallel: 4

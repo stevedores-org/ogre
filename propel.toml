@@ -6,27 +6,27 @@ description = "Agent integration wiring and safety layer (lornu-ai commercial fo
 [[checks]]
 name = "type-safety"
 description = "cargo fmt --check, clippy -D warnings"
-command = "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings"
+command = ["bash", "-c", "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings"]
 timeout_seconds = 900
-required = true
+enabled = true
 
 [[checks]]
 name = "unit-tests"
 description = "cargo test workspace"
-command = "cargo test --workspace"
+command = ["cargo", "test", "--workspace"]
 timeout_seconds = 1200
-required = true
+enabled = true
 
 [[checks]]
 name = "secrets"
 description = "gitleaks detect"
-command = "gitleaks detect --no-banner --redact --source ."
+command = ["gitleaks", "detect", "--no-banner", "--redact", "--source", "."]
 timeout_seconds = 120
-required = true
+enabled = true
 
 [[checks]]
 name = "kustomize-deploy"
 description = "Render deploy/overlays/gke-prod"
-command = "kustomize build deploy/overlays/gke-prod"
+command = ["kustomize", "build", "deploy/overlays/gke-prod"]
 timeout_seconds = 120
-required = true
+enabled = true
