@@ -1,0 +1,33 @@
+# Keep in sync with propel.toml (FFT config-lint).
+
+[project]
+name = "ogre"
+kind = "rust"
+
+[stages.type-safety]
+cmd = ["sh", "-c", "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings"]
+timeout = 900
+enabled = true
+
+[stages.unit-tests]
+cmd = ["cargo", "test", "--workspace"]
+timeout = 1200
+enabled = true
+
+[stages.secrets]
+cmd = ["gitleaks", "detect", "--no-banner", "--redact", "--source", "."]
+timeout = 120
+enabled = true
+
+[stages.kustomize-deploy]
+cmd = ["kustomize", "build", "deploy/overlays/gke-prod"]
+timeout = 120
+enabled = true
+
+[required]
+checks = [
+  "type-safety",
+  "unit-tests",
+  "secrets",
+  "kustomize-deploy",
+]

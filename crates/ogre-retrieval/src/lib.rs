@@ -108,7 +108,7 @@ impl CodeRetriever for DefaultCodeRetriever {
         })
     }
 
-    async fn find_callers(&self, path: &str, fn_name: &str) -> Result<Vec<CodeLocation>> {
+    async fn find_callers(&self, path: &str, _fn_name: &str) -> Result<Vec<CodeLocation>> {
         Ok(vec![CodeLocation {
             path: path.to_string(),
             start_line: 10,
@@ -122,5 +122,18 @@ impl CodeRetriever for DefaultCodeRetriever {
             affected_dependents: vec!["src/main.rs".to_string()],
             breaking_risk: "low".to_string(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn default_retriever_returns_mock_context() {
+        let retriever = DefaultCodeRetriever::new("/tmp/repo");
+        let hits = retriever.query_code("main", 1).await.unwrap();
+        assert_eq!(hits.len(), 1);
+        assert!(hits[0].path.contains("main.rs"));
     }
 }

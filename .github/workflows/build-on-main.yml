@@ -1,0 +1,33 @@
+name: build-on-main
+
+# Build & publish ogre-svc OCI image to GAR on every merge to main.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Build but do not push"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: build-on-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-all:
+    name: Build & push ogre-svc image
+    uses: lornu-ai/oci-builds/.github/workflows/oci-build.yaml@main
+    with:
+      dockworker-config: .propel/config.toml
+      registry: us-central1-docker.pkg.dev/gcp-lornu-ai/lornu
+      dry-run: ${{ inputs.dry-run == true }}
+      cache-mode: max
+    secrets: inherit

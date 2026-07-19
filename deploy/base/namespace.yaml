@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ogre
+  labels:
+    app.kubernetes.io/name: ogre
+    app.kubernetes.io/part-of: ogre
+    app.kubernetes.io/managed-by: kustomize

@@ -1,0 +1,10 @@
+# Propel OCI build matrix for ogre — consumed by
+# lornu-ai/oci-builds/.github/workflows/oci-build.yaml via build-on-main.yml.
+#
+# Tag contract (oci-build.yaml):
+#   main push -> main, main-<UTCyyyymmddHHMMSS>, sha-<short>, 0.1.0
+
+[[targets]]
+name = "ogre-svc"
+image = "ogre-svc"
+nix_output = "ogre-svc-image"

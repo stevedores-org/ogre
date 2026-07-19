@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ogre
+
+resources:
+  - ../../base
+
+# Pin to CI-built GAR image. Flux ImagePolicy can select ^main-([0-9]+)$ when wired in infra-code.
+images:
+  - name: us-central1-docker.pkg.dev/gcp-lornu-ai/lornu/ogre-svc
+    newTag: main

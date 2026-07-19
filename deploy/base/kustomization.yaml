@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ogre
+
+resources:
+  - namespace.yaml
+  - service.yaml
+  - deployment.yaml
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/part-of: ogre
+      app.kubernetes.io/managed-by: kustomize

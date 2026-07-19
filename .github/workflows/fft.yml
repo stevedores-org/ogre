@@ -1,0 +1,35 @@
+# FFT — standardized Rust gate (lornu-ai/ci-checks).
+name: FFT
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: fft-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  fft:
+    uses: lornu-ai/ci-checks/.github/workflows/fft-rust-gate.yml@main
+    with:
+      cargo_workspace: true
+    secrets: inherit
+
+  kustomize-deploy:
+    name: kustomize-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kustomize
+        run: |
+          curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      - name: Render deploy/overlays/gke-prod
+        run: kustomize build deploy/overlays/gke-prod > /dev/null

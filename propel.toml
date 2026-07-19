@@ -1,4 +1,4 @@
-[repo]
+[project]
 owner = "lornu-ai"
 name = "ogre"
 description = "Agent integration wiring and safety layer (lornu-ai commercial fork)"
@@ -21,5 +21,12 @@ required = true
 name = "secrets"
 description = "gitleaks detect"
 command = "gitleaks detect --no-banner --redact --source ."
+timeout_seconds = 120
+required = true
+
+[[checks]]
+name = "kustomize-deploy"
+description = "Render deploy/overlays/gke-prod"
+command = "kustomize build deploy/overlays/gke-prod"
 timeout_seconds = 120
 required = true
